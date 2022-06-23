@@ -3,7 +3,7 @@ using FSM
 using CSV
 using DataFrames
 
-data_force = CSV.File("../data/met_CdP_0506.csv") |> DataFrame
+data_force = CSV.File(joinpath(pwd(), "data", "met_CdP_0506.csv")) |> DataFrame
 
 input = Input{Float64}(
     data_force.year,
@@ -22,7 +22,7 @@ input = Input{Float64}(
 
 @testset "complete sim" begin
 
-    path_ref = "../fortran/output/"
+    path_ref = joinpath(pwd(), "fortran", "output/") #../fortran/output/"
     files_ref = readdir(path_ref)
 
     for file_ref in files_ref

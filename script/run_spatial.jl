@@ -4,6 +4,12 @@ using ProgressMeter
 using MAT
 using Dates
 
+if gethostname() == "LINUX24"
+    meteosource = "/home/haugened/Documents/data/FSM_input/spatial"
+else 
+    meteosource = "K:/DATA_COSMO/OUTPUT_GRID_OSHD_0250/PROCESSED_ANALYSIS/COSMO_1EFA"
+end
+
 # Helper functions
 
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
@@ -28,9 +34,9 @@ function compute_pliquid(ptot, ta, thres_prec=274.19, m_prec=0.1500)
 
 end
 
-function read_meteo(t)
+function read_meteo(t, source)
 
-    folder = joinpath("K:/DATA_COSMO/OUTPUT_GRID_OSHD_0250/PROCESSED_ANALYSIS/COSMO_1EFA", Dates.format(t, "yyyy.mm"))
+    folder = joinpath(source, Dates.format(t, "yyyy.mm"))
     filename = searchdir(folder, "COSMODATA_" * Dates.format(t, "yyyymmddHHMM") * "_C1EFA_")
 
     meteo = matread(joinpath(folder, filename[1]))
@@ -50,7 +56,8 @@ end
 
 # Setting up model
 
-times = DateTime(2020, 9, 1, 1):Hour(1):DateTime(2021, 7, 1, 1)
+times = DateTime(2021,11,01,01):Hour(1):DateTime(2021,11,02,01)
+#DateTime(2020, 9, 1, 1):Hour(1):DateTime(2021, 7, 1, 1)
 
 nrows = 1088
 ncols = 1460
@@ -79,14 +86,14 @@ Tsurf = ones(nrows, ncols)
 
 @showprogress "Running model..." for t in times
 
-    Ta, RH, Ua, SW, LW, Sf, Rf, Ps = read_meteo(t)
+    Ta, RH, Ua, SW, LW, Sf, Rf, Ps = read_meteo(t, meteosource)
 
     run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps)
 
-    if hour(t) == 0
+  #=  if hour(t) == 0
         file = matopen("D:/FSMJL/grid/" * Dates.format(t, "yyyymmdd") * "_hs.mat", "w")
         write(file, "snowdepth", snowdepth)
         close(file)
     end
-
+    =#
 end

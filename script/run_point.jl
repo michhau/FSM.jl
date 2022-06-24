@@ -4,6 +4,14 @@ using ProgressMeter
 using MAT
 using Dates
 
+if gethostname() == "LINUX24"
+    meteosource = "/home/haugened/Documents/data/FSM_input/point/"
+    plotdir = "/home/haugened/Documents/plots/FSM/point/station_"
+else 
+    meteosource = "K:/DATA_COSMO/OUTPUT_STAT_OSHD/PROCESSED_ANALYSIS/COSMO_1EFA"
+    plotdir = "D:/FSMJL/point/station_"
+end
+
 # Helper functions
 
 searchdir(path, key) = filter(x -> occursin(key, x), readdir(path))
@@ -47,7 +55,7 @@ Ps = zeros(length(times), nstat)
 
     # Read meteo
 
-    folder = joinpath("K:/DATA_COSMO/OUTPUT_STAT_OSHD/PROCESSED_ANALYSIS/COSMO_1EFA", Dates.format(t, "yyyy.mm"))
+    folder = joinpath(meteosource, Dates.format(t, "yyyy.mm"))
     filename = searchdir(folder, "COSMODATA_" * Dates.format(t, "yyyymmddHHMM") * "_C1EFA_")
 
     meteo = matread(joinpath(folder, filename[1]))
@@ -137,7 +145,7 @@ end
 @showprogress "Plotting result..." for i in range(1, nstat)
 
     plot(snowdepth[:, i])
-    savefig("D:/FSMJL/point/station_" * string(i) * ".png")
+    savefig(plotdir * string(i) * ".png")
 
 end
 

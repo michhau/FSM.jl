@@ -3,15 +3,16 @@ function snow(ebm::EBM, cn::Constants, Sf, Rf, Ta, D, S, W)
     ebm.Gsoil = ebm.Gsurf
     Roff = Rf * ebm.dt
 
-    csnow = ebm.snow_csnow
-    E = ebm.snow_E
-    U = ebm.snow_U
-    Gs = ebm.snow_Gs
-    dTs = ebm.snow_dTs
-    a = ebm.snow_a
-    b = ebm.snow_b
-    c = ebm.snow_c
-    rhs = ebm.snow_rhs
+    csnow = zeros(Float64, ebm.Nsmax)
+    E = zeros(Float64, ebm.Nsmax)
+    U = zeros(Float64, ebm.Nsmax)
+    Gs = zeros(Float64, ebm.Nsmax)
+    dTs = zeros(Float64, ebm.Nsmax)
+    a = zeros(Float64, ebm.Nsmax)
+    b = zeros(Float64, ebm.Nsmax)
+    c = zeros(Float64, ebm.Nsmax)
+    rhs = zeros(Float64, ebm.Nsmax)
+    snow_gamma = zeros(Float64, ebm.Nsmax)
 
     if (ebm.Nsnow > 0)   # Existing snowpack
         # Heat capacity
@@ -44,7 +45,7 @@ function snow(ebm::EBM, cn::Constants, Sf, Rf, Ta, D, S, W)
             b[k] = csnow[k] + (Gs[k - 1] + Gs[k]) * ebm.dt
             c[k] = 0.0
             rhs[k] = Gs[k - 1] * (ebm.Tsnow[k - 1] - ebm.Tsnow[k]) * ebm.dt + Gs[k] * (ebm.Tsoil[1] - ebm.Tsnow[k]) * ebm.dt
-            tridiag(ebm.Nsnow, ebm.snow_gamma, a, b, c, rhs, dTs)
+            tridiag(ebm.Nsnow, snow_gamma, a, b, c, rhs, dTs)
         end
 
 

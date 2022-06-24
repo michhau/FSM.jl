@@ -2,7 +2,7 @@ using FSM
 using Plots
 using ProgressMeter
 using MAT
-using Dates
+using Dates#, BenchmarkTools
 
 if gethostname() == "LINUX24"
     meteosource = "/home/haugened/Documents/data/FSM_input/spatial"
@@ -62,25 +62,31 @@ times = DateTime(2021,11,01,01):Hour(1):DateTime(2021,11,02,01)
 nrows = 1088
 ncols = 1460
 
-ebm_template = EBM{Float64}(
-        am=1,
-        cm=1,
-        dm=1,
-        em=1,
-        hm=1,
-        zT=10.5,
-        zvar=false,
-        Tsoil=[282.98, 284.17, 284.70, 284.70]
-    )
+function setupspatialrun(nrows::Int, ncols::Int)
+    @info("Setting up spatial run")
+    ebm_template = EBM{Float64}(
+            am=1,
+            cm=1,
+            dm=1,
+            em=1,
+            hm=1,
+            zT=10.5,
+            zvar=false,
+            Tsoil=[282.98, 284.17, 284.70, 284.70]
+        )
 
-ebm_mat = [deepcopy(ebm_template) for i=1:nrows, j=1:ncols]
+    ebm_mat = [deepcopy(ebm_template) for i=1:nrows, j=1:ncols]
 
-cn = Constants{Float64}()
+    cn = Constants{Float64}()
 
-snowdepth = ones(nrows, ncols)
-SWE = ones(nrows, ncols)
-Tsurf = ones(nrows, ncols)
+    snowdepth = ones(nrows, ncols)
+    SWE = ones(nrows, ncols)
+    Tsurf = ones(nrows, ncols)
 
+    return ebm_mat, cn, snowdepth, SWE, Tsurf
+end
+
+@time (ebm_mat, cn, snowdepth, SWE, Tsurf) = setupspatialrun(nrows, ncols)
 
 # Run the model
 

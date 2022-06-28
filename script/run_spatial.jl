@@ -6,6 +6,8 @@ using Dates#, BenchmarkTools
 
 if gethostname() == "LINUX24"
     meteosource = "/home/haugened/Documents/data/FSM_input/spatial"
+elseif gethostname() == "Michi-T450s"
+    meteosource = "/home/michi/Documents/slf/data_input_FSM/spatial/"
 else 
     meteosource = "K:/DATA_COSMO/OUTPUT_GRID_OSHD_0250/PROCESSED_ANALYSIS/COSMO_1EFA"
 end
@@ -64,18 +66,23 @@ ncols = 1460
 
 function setupspatialrun(nrows::Int, ncols::Int)
     @info("Setting up spatial run")
-    ebm_template = EBM{Float64}(
-            am=1,
-            cm=1,
-            dm=1,
-            em=1,
-            hm=1,
+    tsoil_tmp = zeros(Float64, nrows, ncols, 4)
+    for icol in 1:ncols
+        for jrow in 1:nrows
+            tsoil_tmp[jrow, icol, :] .= [282.98, 284.17, 284.70, 284.70]
+        end
+    end
+
+    ebm_mat = EBM{Float64}(
+            am=ones(Int64, nrows, ncols),
+            cm=ones(Int64, nrows, ncols),
+            dm=ones(Int64, nrows, ncols),
+            em=ones(Int64, nrows, ncols),
+            hm=ones(Int64, nrows, ncols),
             zT=10.5,
             zvar=false,
-            Tsoil=[282.98, 284.17, 284.70, 284.70]
+            Tsoil=tsoil_tmp
         )
-
-    ebm_mat = [deepcopy(ebm_template) for i=1:nrows, j=1:ncols]
 
     cn = Constants{Float64}()
 

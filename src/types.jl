@@ -42,8 +42,11 @@ Base.@kwdef struct Constants{T}
 end
 
 
-Base.@kwdef mutable struct EBM{T}
+Base.@kwdef mutable struct EBM{Float64}
 
+    nrow = 1088
+    ncol = 1460
+    
     ### Settings ##############################################################
 
     # Maximum number of snow layers
@@ -53,19 +56,19 @@ Base.@kwdef mutable struct EBM{T}
     Nsoil::Int = 4
 
     # Time step (s)
-    dt::T = 3600
+    dt::Float64 = 3600
 
     # Minimum snow layer thicknesses (m)
-    Dzsnow::Vector{T} = [0.1, 0.2, 0.4]
+    Dzsnow::Vector{Float64} = [0.1, 0.2, 0.4]
 
     # Soil layer thicknesses (m)
-    Dzsoil::Vector{T} = [0.1, 0.2, 0.4, 0.8]
+    Dzsoil::Vector{Float64} = [0.1, 0.2, 0.4, 0.8]
 
     # Temperature measurement height (m)
-    zT::T = 2
+    zT::Float64 = 2
 
     # Wind measurement height (m)
-    zU::T = 10
+    zU::Float64 = 10
 
     # Subtract snow depth from measurement height
     zvar::Bool = true
@@ -73,197 +76,202 @@ Base.@kwdef mutable struct EBM{T}
     ### Snow parameters #######################################################
 
     # Maximum albedo for fresh snow
-    asmx::T = 0.8
+    asmx::Float64 = 0.8
 
     # Minimum albedo for melting snow
-    asmn::T = 0.5
+    asmn::Float64 = 0.5
 
     # Stability slope parameter
-    bstb::T = 5
+    bstb::Float64 = 5
 
     # Snow thermal conductivity exponent
-    bthr::T = 2
+    bthr::Float64 = 2
 
     # Snow cover fraction depth scale (m)
-    hfsn::T = 0.1
+    hfsn::Float64 = 0.1
 
     # Fixed thermal conductivity of snow (W/m/K)
-    kfix::T = 0.24
+    kfix::Float64 = 0.24
 
     # Fixed snow density (kg/m^3)
-    rho0::T = 300
+    rho0::Float64 = 300
 
     # Fresh snow density (kg/m^3)
-    rhof::T = 100
+    rhof::Float64 = 100
 
     # Maximum density for cold snow (kg/m^3)
-    rcld::T = 300
+    rcld::Float64 = 300
 
     # Maximum density for melting snow (kg/m^3)
-    rmlt::T = 500
+    rmlt::Float64 = 500
 
     # Snowfall to refresh albedo (kg/m^2)
-    Salb::T = 10
+    Salb::Float64 = 10
 
     # Albedo decay temperature threshold (C)
-    Talb::T = -2
+    Talb::Float64 = -2
 
     # Cold snow albedo decay timescale (h)
-    tcld::T = 1000
+    tcld::Float64 = 1000
 
     # Melting snow albedo decay timescale (h)
-    tmlt::T = 100
+    tmlt::Float64 = 100
 
     # Snow compaction time scale (h)
-    trho::T = 200
+    trho::Float64 = 200
 
     # Irreducible liquid water content of snow
-    Wirr::T = 0.03
+    Wirr::Float64 = 0.03
 
     # Snow roughness length (m)
-    z0sn::T = 0.01
+    z0sn::Float64 = 0.01
 
     ### Surface parameters ####################################################
 
     # Snow-free ground albedo
-    alb0::T = 0.2
+    alb0::Float64 = 0.2
 
     # Surface conductance for saturated soil (m/s)
-    gsat::T = 0.01
+    gsat::Float64 = 0.01
 
     # Snow-free roughness length (m)
-    z0sf::T = 0.1
+    z0sf::Float64 = 0.1
 
     ### Soil properties #######################################################
 
     # Soil clay fraction
-    fcly::T = 0.3
+    fcly::Float64 = 0.3
 
     # Soil sand fraction
-    fsnd::T = 0.6
+    fsnd::Float64 = 0.6
 
     # Clapp-Hornberger exponent
-    b::T = 7.630000000000001
+    b::Float64 = 7.630000000000001
 
     # Volumetric heat capacity of dry soil (J/K/m^3)
-    hcap_soil::T = 2.2993333333333335e6
+    hcap_soil::Float64 = 2.2993333333333335e6
 
     # Saturated soil water pressure (m)
-    sathh::T = 0.10789467222298288
+    sathh::Float64 = 0.10789467222298288
 
     # Volumetric soil moisture concentration at saturation
-    Vsat::T = 0.4087
+    Vsat::Float64 = 0.4087
 
     # Volumetric soil moisture concentration at critical point
-    Vcrit::T = 0.2603859120641063
+    Vcrit::Float64 = 0.2603859120641063
 
     # Thermal conductivity of dry soil (W/m/K)
-    hcon_soil::T = 0.2740041303112452
+    hcon_soil::Float64 = 0.2740041303112452
 
     ### State variables #######################################################
 
     # Snow albedo
-    albs::T = 0.8
+    albs::Array{Float64,2} = fill(0.8, nrow, ncol)
 
     # Snow layer thicknesses (m)
-    Ds::Vector{T} = fill(0, Nsmax)
+    Ds = zeros(Float64, nrow, ncol, Nsmax)
 
     # Number of snow layers
-    Nsnow::Int = 0
+    Nsnow = zeros(Int64, nrow, ncol)
 
     # Ice content of snow layers (kg/m^2)
-    Sice::Vector{T} = fill(0, Nsmax)
+    Sice = zeros(Float64, nrow, ncol, Nsmax)
 
     # Liquid content of snow layers (kg/m^2)
-    Sliq::Vector{T} = fill(0, Nsmax)
+    Sliq = zeros(Float64, nrow, ncol, Nsmax)
 
     # Volumetric moisture content of soil layers
-    theta::Vector{T} = fill(0.5 * Vsat, Nsoil)
+    theta::Array{Float64, 3} = fill(0.5*Vsat, nrow, ncol, Nsoil)
 
     # Snow layer temperatures (K)
-    Tsnow::Vector{T} = fill(273.15, Nsmax)
+    Tsnow = fill(273.15, nrow, ncol, Nsmax)
 
     # Soil layer temperatures (K)
-    Tsoil::Vector{T} = fill(285, Nsoil)
+    Tsoil::Array{Float64, 3} = fill(285.0, nrow, ncol, Nsoil)
 
-    # Surface skin temperature (K)
-    Tsurf::T = Tsoil[1]
+    # Surface skin temperature (K) (needs to be filled after construction)
+    Tsurf = Tsoil[:,:,1]
+    #for icol in 1:ncol
+    #    for jrow in 1:nrow
+    #        Tsurf[jrow, icol] = Tsoil[jrow, icol, 1]
+    #    end
+    #end
 
     ### Configurations ########################################################
 
     # Snow albedo model
-    am::Int = 0
+    am = zeros(Int64, nrow, ncol)
 
     # Snow conductivity model
-    cm::Int = 0
+    cm = zeros(Int64, nrow, ncol)
 
     # Snow density model
-    dm::Int = 0
+    dm = zeros(Int64, nrow, ncol)
 
     # Surface exchange model
-    em::Int = 0
+    em = zeros(Int64, nrow, ncol)
 
     # Snow hydraulics model
-    hm::Int = 0
+    hm = zeros(Int64, nrow, ncol)
 
     ### Internal variables ####################################################
 
     # Thermal conductivity of snow (W/m/K)
-    ksnow::Vector{T} = fill(0, Nsmax)
+    ksnow = zeros(Float64, nrow, ncol, Nsmax)
 
     # Thermal conductivity of soil (W/m/K)
-    ksoil::Vector{T} = fill(0, Nsoil)
+    ksoil = zeros(Float64, nrow, ncol, Nsoil)
 
     # Areal heat capacity of soil (J/K/m^2)
-    csoil::Vector{T} = fill(0, Nsoil)
+    csoil= zeros(Float64, nrow, ncol, Nsoil)
 
     # Surface moisture conductance (m/s)
-    gs::T = 0
+    gs = zeros(Float64, nrow, ncol)
 
     # Effective albedo
-    alb::T = 0
+    alb = zeros(Float64, nrow, ncol)
 
     # Fresh snow density (kg/m^3)
-    rfs::T = 0
+    rfs = zeros(Float64, nrow, ncol)
 
     # Snow cover fraction
-    fsnow::T = 0
+    fsnow = zeros(Float64, nrow, ncol)
 
     # Transfer coefficient for heat and moisture
-    CH::T = 0
+    CH = zeros(Float64, nrow, ncol)
 
     # Surface roughness length (m)
-    z0::T = 0
+    z0 = zeros(Float64, nrow, ncol)
 
     # Surface thermal conductivity (W/m/K)
-    ksurf::T = 0
+    ksurf = zeros(Float64, nrow, ncol)
 
     # Surface layer temperature (K)
-    Ts1::T = 0
+    Ts1 = zeros(Float64, nrow, ncol)
 
     # Surface layer thickness (m)
-    Dz1::T = 0
+    Dz1 = zeros(Float64, nrow, ncol)
 
     # Snow sublimation rate (kg/m^2/s)
-    Esnow::T = 0
+    Esnow = zeros(Float64, nrow, ncol)
 
     # Heat flux into surface (W/m^2)
-    Gsurf::T = 0
+    Gsurf = zeros(Float64, nrow, ncol)
 
     # Sensible heat flux (W/m^2)
-    Hsurf::T = 0
+    Hsurf = zeros(Float64, nrow, ncol)
 
     # Latent heat flux (W/m^2)
-    LEsrf::T = 0
+    Lesrf = zeros(Float64, nrow, ncol)
 
     # Surface melt rate (kg/m^2/s)
-    Melt::T = 0
+    Melt = zeros(Float64, nrow, ncol)
 
     # Net radiation (W/m^2)
-    Rnet::T = 0
+    Rnet = zeros(Float64, nrow, ncol)
 
     # Heat flux into soil (W/m^2)
-    Gsoil::T = 0
+    Gsoil = zeros(Float64, nrow, ncol)
     #=
     # Temporary soil variables
     soil_a::Vector{T} = fill(0, Nsoil)

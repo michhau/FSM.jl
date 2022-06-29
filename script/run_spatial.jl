@@ -3,6 +3,7 @@ using Plots
 using ProgressMeter
 using MAT
 using Dates#, BenchmarkTools
+using Profile
 
 if gethostname() == "LINUX24"
     meteosource = "/home/haugened/Documents/data/FSM_input/spatial"
@@ -97,11 +98,12 @@ end
 
 # Run the model
 
-@showprogress "Running model..." for t in times
+#@showprogress "Running model..." 
+for t in times[2:3]
 
     Ta, RH, Ua, SW, LW, Sf, Rf, Ps = read_meteo(t, meteosource)
 
-    run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps)
+    p = @profile run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)
 
   #=  if hour(t) == 0
         file = matopen("D:/FSMJL/grid/" * Dates.format(t, "yyyymmdd") * "_hs.mat", "w")

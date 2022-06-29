@@ -44,24 +44,24 @@ md"""
 # ╔═╡ 4e6b1406-4a95-11eb-0827-432daf4b223e
 function compute_albedo(ebm::EBM, cn::Constants, Sf)
 
-	if ebm.am == 0  # Diagnosed snow albedo
-		ebm.albs = ebm.asmn + (ebm.asmx - ebm.asmn) * (ebm.Tsurf - cn.Tm) / ebm.Talb
-	elseif ebm.am == 1  # Prognostic snow albedo
+	if ebm.am[row, col] == 0  # Diagnosed snow albedo
+		ebm.albs[row, col] = ebm.asmn + (ebm.asmx - ebm.asmn) * (ebm.Tsurf[row, col] - cn.Tm) / ebm.Talb
+	elseif ebm.am[row, col] == 1  # Prognostic snow albedo
 		tau = 3600 * ebm.tcld
-		if (ebm.Tsurf >= cn.Tm)
+		if (ebm.Tsurf[row, col] >= cn.Tm)
 			tau = 3600 * ebm.tmlt
 		end
 		rt = 1 / tau + Sf / ebm.Salb
 		alim = (ebm.asmn / tau + Sf * ebm.asmx / ebm.Salb) / rt
-		ebm.albs = alim + (ebm.albs - alim) * exp(-rt * ebm.dt)
+		ebm.albs[row, col] = alim + (ebm.albs[row, col] - alim) * exp(-rt * ebm.dt)
 	end
 
-	if (ebm.albs < min(ebm.asmx, ebm.asmn))
-		ebm.albs = min(ebm.asmx, ebm.asmn)
+	if (ebm.albs[row, col] < min(ebm.asmx, ebm.asmn))
+		ebm.albs[row, col] = min(ebm.asmx, ebm.asmn)
 	end
 
-	if (ebm.albs > max(ebm.asmx, ebm.asmn))
-		ebm.albs = max(ebm.asmx, ebm.asmn)
+	if (ebm.albs[row, col] > max(ebm.asmx, ebm.asmn))
+		ebm.albs[row, col] = max(ebm.asmx, ebm.asmn)
 	end
 
 end

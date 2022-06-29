@@ -36,14 +36,14 @@ function run!(ebm::EBM, cn::Constants, snowdepth::Vector{Float64}, SWE::Vector{F
 
         soil(ebm)
 
-        Tsurf[i] = ebm.Tsurf
+        Tsurf[i] = ebm.Tsurf[row, col]
 
     end
 
 end
 
 "spatial"
-function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{Float64}, Tsurf::Matrix{Float64}, 
+function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{Float64}, Tsurf::Matrix{Float64},
     SW::Matrix{Float64}, LW::Matrix{Float64}, Sf::Matrix{Float64}, Rf::Matrix{Float64}, Ta::Matrix{Float64}, RH::Matrix{Float64}, Ua::Matrix{Float64}, Ps::Matrix{Float64}, nrow::Int, ncol::Int)
 
     D = zeros(ebm.Nsmax)
@@ -52,21 +52,25 @@ function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{F
 
     Ua = max.(Ua, 0.1)
 
+    for icol in 1:ncol
+        for jrow in 1:nrow
+            Qs = qsat(true, Ps[jrow, icol], Ta[jrow, icol], cn)
+            Qa = (RH[jrow, icol] / 100) * Qs
 
-    Qs = qsat(true, Ps[i], Ta[i], cn)
-    Qa = (RH[i] / 100) * Qs
-        
-    surf_props(ebm[i], cn, Sf[i])
+            surf_props(ebm, cn, Sf[jrow, icol], nrow, ncol)
 
-    for i in 1:6
-        surf_exch(ebm[i], cn, Ta[i], Ua[i])
-        surf_ebal(ebm[i], cn, Ta[i], Qa, Ua[i], Ps[i], SW[i], LW[i])
+            kdx = 1
+            while kdx < 7
+                surf_exch(ebm, cn, Ta[jrow, icol], Ua[jrow, icol], jrow, icol)
+                surf_ebal(ebm, cn, Ta[jrow, icol], Qa, Ua[jrow, icol], Ps[jrow, icol], SW[jrow, icol], LW[jrow, icol], jrow, icol)
+                kdx = kdx + 1
+            end
+
+            snowdepth[jrow, icol], SWE[jrow, icol] = snow(ebm, cn, Sf[jrow, icol], Rf[jrow, icol], Ta[jrow, icol], D, S, W, jrow, icol)
+
+            soil(ebm, jrow, icol)
+
+            Tsurf[jrow, icol] = ebm.Tsurf[jrow, icol]
+        end
     end
-
-    snowdepth[i], SWE[i] = snow(ebm[i], cn, Sf[i], Rf[i], Ta[i], D, S, W)
-
-    soil(ebm[i])
-
-    Tsurf[i] = ebm[i].Tsurf
-
 end

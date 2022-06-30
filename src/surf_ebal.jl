@@ -1,72 +1,74 @@
-function surf_ebal(ebm::EBM, cn::Constants, Ta, Qa, Ua, Ps, SW, LW, row::Int = 1, col::Int = 1)
+function surf_ebal(ebm::EBM, cn::Constants, Ta, Qa, Ua, Ps, SW, LW, irow::Int = 1, icol::Int = 1)
+    
+    Qs = qsat(false, Ps, ebm.Tsurf, cn)
+ 
+    psi = ebm.gs ./ (ebm.gs .+ ebm.CH .* Ua)
+    psi[Qs .< Qa .|| ebm.Sice[:,:,1] .> 0] .= 1.0
+    
+    rho = Ps ./ (cn.Rgas .* Ta)
+    rKH = rho .* ebm.CH .* Ua
+    #rho = nothing
 
-    Qs = qsat(false, Ps, ebm.Tsurf[row, col], cn)
-
-    psi = ebm.gs[row, col] / (ebm.gs[row, col] + ebm.CH[row, col] * Ua)
-    if (Qs < Qa || ebm.Sice[row, col, 1] > 0.0)
-        psi = 1.0
-    end
-    Lh = cn.Ls
-    if (ebm.Tsurf[row, col] > cn.Tm)
-        Lh = cn.Lc
-    end
-    rho = Ps / (cn.Rgas * Ta)
-    rKH = rho * ebm.CH[row, col] * Ua
+    Lh = fill(cn.Ls, irow, icol)
+    Lh[ebm.Tsurf .> cn.Tm] .= cn.Lc
 
     # Surface energy balance without melt
-    D = Lh * Qs / (cn.Rwat * ebm.Tsurf[row, col]^2.0)
-    Esurf = psi * rKH * (Qs - Qa)
-    ebm.Gsurf[row, col] = 2.0 * ebm.ksurf[row, col] * (ebm.Tsurf[row, col] - ebm.Ts1[row, col]) / ebm.Dz1[row, col]
+    D = Lh .* Qs ./ (cn.Rwat .* ebm.Tsurf .^2)
+    Esurf = psi .* rKH .* (Qs .- Qa)
+    ebm.Gsurf = 2 .* ebm.ksurf .* (ebm.Tsurf .- ebm.Ts1) ./ ebm.Dz1
 
-    ebm.Hsurf[row, col] = cn.cp * rKH * (ebm.Tsurf[row, col] - Ta)
-    ebm.Lesrf[row, col] = Lh * Esurf
-    ebm.Melt[row, col] = 0.0
-    ebm.Rnet[row, col] = (1.0 - ebm.alb[row, col]) * SW + LW - cn.sb * ebm.Tsurf[row, col]^4.0
-    dTs = (ebm.Rnet[row, col] - ebm.Hsurf[row, col] - ebm.Lesrf[row, col] - ebm.Gsurf[row, col]) / ((cn.cp + Lh * psi * D) * rKH + 2 * ebm.ksurf[row, col] / ebm.Dz1[row, col] + 4.0 * cn.sb * ebm.Tsurf[row, col]^3.0)
-    dE = psi * rKH * D * dTs
-    dG = 2.0 * ebm.ksurf[row, col] * dTs / ebm.Dz1[row, col]
-    dH = cn.cp * rKH * dTs
-    dR = -cn.sb * ebm.Tsurf[row, col]^3.0 * dTs
-
+    ebm.Hsurf = cn.cp .* rKH .* (ebm.Tsurf .- Ta)
+    ebm.Lesrf = Lh .* Esurf
+    ebm.Melt .= 0.0
+    ebm.Rnet = (1 .- ebm.alb) .* SW .+ LW .- cn.sb .* ebm.Tsurf .^4
+    dTs = (ebm.Rnet .- ebm.Hsurf .- ebm.Lesrf .- ebm.Gsurf) ./ ((cn.cp .+ Lh .* psi .* D) .* rKH .+ 2 .* ebm.ksurf ./ ebm.Dz1 .+ 4.0 .* cn.sb .* ebm.Tsurf .^3)
+    dE = psi .* rKH .* D .* dTs
+    dG = 2 .* ebm.ksurf .* dTs ./ ebm.Dz1
+    dH = cn.cp .* rKH .* dTs
+    dR = -cn.sb .* ebm.Tsurf .^3 .* dTs
+    
     # Surface melting
-    if (ebm.Tsurf[row, col] + dTs > cn.Tm && ebm.Sice[row, col, 1] > 0.0)
-        ebm.Melt[row, col] = sum(ebm.Sice[row, col, :]) / ebm.dt
-        dTs = (ebm.Rnet[row, col] - ebm.Hsurf[row, col] - ebm.Lesrf[row, col] - ebm.Gsurf[row, col] - cn.Lf * ebm.Melt[row, col]) / ((cn.cp + cn.Ls * psi * D) * rKH + 2.0 * ebm.ksurf[row, col] / ebm.Dz1[row, col] + 4.0 * cn.sb * ebm.Tsurf[row, col]^3.0)
-        dE = rKH * D * dTs
-        dG = 2.0 * ebm.ksurf[row, col] * dTs / ebm.Dz1[row, col]
-        dH = cn.cp * rKH * dTs
-        if (ebm.Tsurf[row, col] + dTs < cn.Tm)
-            Qs = qsat(false, Ps, cn.Tm, cn)
-            Esurf = rKH * (Qs - Qa)
-            ebm.Gsurf[row, col] = 2.0 * ebm.ksurf[row, col] * (cn.Tm - ebm.Ts1[row, col]) / ebm.Dz1[row, col]
-            ebm.Hsurf[row, col] = cn.cp * rKH * (cn.Tm - Ta)
-            ebm.Lesrf[row, col] = cn.Ls * Esurf
-            ebm.Rnet[row, col] = (1.0 - ebm.alb[row, col]) * SW + LW - cn.sb * cn.Tm^4.0
-            ebm.Melt[row, col] = (ebm.Rnet[row, col] - ebm.Hsurf[row, col] - ebm.Lesrf[row, col] - ebm.Gsurf[row, col]) / cn.Lf
-            ebm.Melt[row, col] = max(ebm.Melt[row, col], 0.0)
-            dE = 0.0
-            dG = 0.0
-            dH = 0.0
-            dR = 0.0
-            dTs = cn.Tm - ebm.Tsurf[row, col]
-        end
-    end
+    #define gridpoints with surface melting
+    srfmelt = ebm.Tsurf .+ dTs .> cn.Tm .&& ebm.Sice[:,:,1] .> 0
+
+    ebm.Melt[srfmelt] = sum(ebm.Sice[srfmelt,:], dims=2) ./ ebm.dt
+    dTs[srfmelt] .-= (cn.Lf .* ebm.Melt[srfmelt]) ./ ((cn.cp .+ cn.Ls .* psi[srfmelt] .* D[srfmelt]) .* rKH[srfmelt] .+ 2 .* ebm.ksurf[srfmelt] ./ ebm.Dz1[srfmelt] .+ 4 .* cn.sb .* ebm.Tsurf[srfmelt] .^3)
+    dE[srfmelt] ./= psi[srfmelt]
+    #dG[srfmelt] = 2 .* ebm.ksurf[srfmelt] .* dTs[srfmelt] ./ ebm.Dz1[srfmelt]
+    #dH[srfmelt] = cn.cp .* rKH .* dTs
+
+    cond_tmp = ebm.Tsurf .+ dTs .< cn.Tm
+    cond2 = srfmelt .& cond_tmp
+
+    Qs[cond2] .= qsat(false, Ps[cond2], cn.Tm, cn)
+    Esurf[cond2] .= rKH[cond2] .* (Qs[cond2] - Qa[cond2])
+    ebm.Gsurf[cond2] .*= (cn.Tm .- ebm.Ts1[cond2])./(ebm.Tsurf[cond2] .- ebm.Ts1[cond2])
+    ebm.Hsurf[cond2] .*= (cn.Tm .- Ta[cond2])./(ebm.Tsurf[cond2] .- Ta[cond2])
+    ebm.Lesrf[cond2] .= cn.Ls .* Esurf[cond2]
+    ebm.Rnet[cond2] .+= cn.sb .* (ebm.Tsurf[cond2] .^4 .- cn.Tm .^4)
+    ebm.Melt[cond2] .= (ebm.Rnet[cond2] .- ebm.Hsurf[cond2] .- ebm.Lesrf[cond2] .- ebm.Gsurf[cond2]) ./ cn.Lf
+    ebm.Melt[cond2] .= max.(ebm.Melt[cond2], 0.0)
+    dE[cond2] .= 0.0
+    dG[cond2] .= 0.0
+    dH[cond2] .= 0.0
+    dR[cond2] .= 0.0
+    dTs[cond2] .= cn.Tm .- ebm.Tsurf[cond2]
 
     # Update surface temperature and fluxes
-    ebm.Tsurf[row, col] = ebm.Tsurf[row, col] + dTs
-    Esurf = Esurf + dE
-    ebm.Gsurf[row, col] = ebm.Gsurf[row, col] + dG
-    ebm.Hsurf[row, col] = ebm.Hsurf[row, col] + dH
-    ebm.Rnet[row, col]  = ebm.Rnet[row, col] + dR
-    ebm.Esnow[row, col] = 0.0
-    Esoil = 0.0
-    if (ebm.Sice[row, col, 1] > 0.0 || ebm.Tsurf[row, col] < cn.Tm)
-        ebm.Esnow[row, col] = Esurf
-        ebm.Lesrf[row, col] = cn.Ls * Esurf
-    else
-        Esoil = Esurf
-        ebm.Lesrf[row, col] = cn.Lc * Esurf
-    end
+    ebm.Tsurf +=  dTs
+    Esurf += dE
+    ebm.Gsurf += dG
+    ebm.Hsurf += dH
+    ebm.Rnet += dR
+    ebm.Esnow .= 0.0
+    #Esoil = zeros(Float64, irow, icol)
+
+    cond3 = (ebm.Sice[:,:,1] .> 0 .|| ebm.Tsurf .< Tm)
+
+    ebm.Esnow[cond3] .= Esurf[cond3]
+    ebm.Lesrf[cond3] .= cn.Ls .* Esurf[cond3]
+    #Esoil[.!(cond3)] .= Esurf[cond3]
+    ebm.Lesrf[.!(cond3)] .= cn.Lc .* Esurf[.!(cond3)]
 
     return nothing
 

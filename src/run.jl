@@ -1,3 +1,4 @@
+
 "point"
 function run!(ebm::EBM, cn::Constants, snowdepth::Vector{Float64}, SWE::Vector{Float64}, Tsurf::Vector{Float64}, in::Input)
 
@@ -52,25 +53,29 @@ function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{F
 
     Ua = max.(Ua, 0.1)
 
-    for icol in 1:ncol
-        for jrow in 1:nrow
-            Qs = qsat(true, Ps[jrow, icol], Ta[jrow, icol], cn)
-            Qa = (RH[jrow, icol] / 100) * Qs
+    Qs = qsat(true, Ps, Ta, cn)
+    Qa = (RH ./ 100) .* Qs
 
-            surf_props(ebm, cn, Sf[jrow, icol], nrow, ncol)
+    println("surf_props")
+    @time surf_props(ebm, cn, Sf, nrow, ncol)
 
-            kdx = 1
-            while kdx < 7
-                surf_exch(ebm, cn, Ta[jrow, icol], Ua[jrow, icol], jrow, icol)
-                surf_ebal(ebm, cn, Ta[jrow, icol], Qa, Ua[jrow, icol], Ps[jrow, icol], SW[jrow, icol], LW[jrow, icol], jrow, icol)
-                kdx = kdx + 1
-            end
-
-            snowdepth[jrow, icol], SWE[jrow, icol] = snow(ebm, cn, Sf[jrow, icol], Rf[jrow, icol], Ta[jrow, icol], D, S, W, jrow, icol)
-
-            soil(ebm, jrow, icol)
-
-            Tsurf[jrow, icol] = ebm.Tsurf[jrow, icol]
-        end
+    println("surf_exch and _ebal 6 times")
+    kdx = 1
+    while kdx < 7
+        @time surf_exch(ebm, cn, Ta, Ua, nrow, ncol)
+        println("surf_exch done")
+        @time surf_ebal(ebm, cn, Ta, Qa, Ua, Ps, SW, LW, nrow, ncol)
+        println("surf_ebal done")
+        kdx = kdx + 1
     end
+
+    println("snow")
+    @time (snowdepth, SWE) = snow(ebm, cn, Sf, Rf, Ta, D, S, W, nrow, ncol)
+
+    println("soil")
+    @time soil(ebm, nrow, ncol)
+
+    Tsurf = ebm.Tsurf
+    @show("done with one round")
+
 end

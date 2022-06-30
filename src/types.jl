@@ -272,26 +272,25 @@ Base.@kwdef mutable struct EBM{Float64}
 
     # Heat flux into soil (W/m^2)
     Gsoil = zeros(Float64, nrow, ncol)
-    #=
+    
     # Temporary soil variables
-    soil_a::Vector{T} = fill(0, Nsoil)
-    soil_b::Vector{T} = fill(0, Nsoil)
-    soil_c::Vector{T} = fill(0, Nsoil)
-    soil_Gs::Vector{T} = fill(0, Nsoil)
-    soil_rhs::Vector{T} = fill(0, Nsoil)
-    soil_dTs::Vector{T} = fill(0, Nsoil)
-    soil_gamma::Vector{T} = fill(0, Nsoil)
+    soil_a = zeros(Float64, nrow, ncol, Nsoil)
+    soil_b = zeros(Float64, nrow, ncol, Nsoil)
+    soil_c = zeros(Float64, nrow, ncol, Nsoil)
+    soil_Gs = zeros(Float64, nrow, ncol, Nsoil)
+    soil_rhs = zeros(Float64, nrow, ncol, Nsoil)
+    soil_dTs = zeros(Float64, nrow, ncol, Nsoil)
+    soil_gamma = zeros(Float64, nrow, ncol, Nsoil)
 
     # Temporary snow variables
-    snow_csnow::Vector{T} = fill(0, Nsmax)
-    snow_E::Vector{T} = fill(0, Nsmax)
-    snow_U::Vector{T} = fill(0, Nsmax)
-    snow_Gs::Vector{T} = fill(0, Nsmax)
-    snow_dTs::Vector{T} = fill(0, Nsmax)
-    snow_a::Vector{T} = fill(0, Nsmax)
-    snow_b::Vector{T} = fill(0, Nsmax)
-    snow_c::Vector{T} = fill(0, Nsmax)
-    snow_rhs::Vector{T} = fill(0, Nsmax)
-    snow_gamma::Vector{T} = fill(0, Nsmax)
-    =#
+    snow_csnow::Vector{Float64} = fill(0, Nsmax)
+    snow_E::Vector{Float64} = fill(0, Nsmax)
+    snow_U::Vector{Float64} = fill(0, Nsmax)
+    snow_Gs::Vector{Float64} = fill(0, Nsmax)
+    snow_dTs::Vector{Float64} = fill(0, Nsmax)
+    snow_a::Vector{Float64} = fill(0, Nsmax)
+    snow_b::Vector{Float64} = fill(0, Nsmax)
+    snow_c::Vector{Float64} = fill(0, Nsmax)
+    snow_rhs::Vector{Float64} = fill(0, Nsmax)
+    snow_gamma::Vector{Float64} = fill(0, Nsmax)
 end

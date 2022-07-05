@@ -68,11 +68,10 @@ ncols = 1460
 function setupspatialrun(nrows::Int, ncols::Int)
     @info("Setting up spatial run")
     tsoil_tmp = zeros(Float64, nrows, ncols, 4)
-    for icol in 1:ncols
-        for jrow in 1:nrows
-            tsoil_tmp[jrow, icol, :] .= [282.98, 284.17, 284.70, 284.70]
-        end
-    end
+    tsoil_tmp[:,:,1] .= 282.98
+    tsoil_tmp[:,:,2] .= 284.17
+    tsoil_tmp[:,:,3] .= 284.70
+    tsoil_tmp[:,:,4] .= 284.70
 
     ebm_mat = EBM{Float64}(
             am=ones(Int64, nrows, ncols),
@@ -105,7 +104,7 @@ end
     println("reading meteo-input done")
 
     #p = @profile 
-    run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)
+    @time run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)
 
   #=  if hour(t) == 0
         file = matopen("D:/FSMJL/grid/" * Dates.format(t, "yyyymmdd") * "_hs.mat", "w")

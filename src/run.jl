@@ -47,9 +47,9 @@ end
 function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{Float64}, Tsurf::Matrix{Float64},
     SW::Matrix{Float64}, LW::Matrix{Float64}, Sf::Matrix{Float64}, Rf::Matrix{Float64}, Ta::Matrix{Float64}, RH::Matrix{Float64}, Ua::Matrix{Float64}, Ps::Matrix{Float64}, nrow::Int, ncol::Int)
 
-    D = zeros(ebm.Nsmax)
-    S = zeros(ebm.Nsmax)
-    W = zeros(ebm.Nsmax)
+    D = zeros(Float64, nrow, ncol, ebm.Nsmax)
+    S = zeros(Float64, nrow, ncol, ebm.Nsmax)
+    W = zeros(Float64, nrow, ncol, ebm.Nsmax)
 
     Ua = max.(Ua, 0.1)
 
@@ -76,6 +76,5 @@ function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{F
     @time soil(ebm, nrow, ncol)
 
     Tsurf = ebm.Tsurf
-    @show("done with one round")
 
 end

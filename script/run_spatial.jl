@@ -97,14 +97,13 @@ end
 
 # Run the model
 
-#@showprogress "Running model..." 
-#for t in times[2:3]
+@showprogress "Running model..." for t in times
 
-    (Ta, RH, Ua, SW, LW, Sf, Rf, Ps) = read_meteo(times[2], meteosource)
-    println("reading meteo-input done")
+    (Ta, RH, Ua, SW, LW, Sf, Rf, Ps) = read_meteo(t, meteosource)
+    #println("reading meteo-input done")
 
     #p = @profile 
-    @time run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)
+    run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)
 
   #=  if hour(t) == 0
         file = matopen("D:/FSMJL/grid/" * Dates.format(t, "yyyymmdd") * "_hs.mat", "w")
@@ -112,4 +111,4 @@ end
         close(file)
     end
     =#
-#end
+end

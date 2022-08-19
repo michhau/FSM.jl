@@ -89,8 +89,9 @@ end
 @time (ebm_mat, cn, snowdepth, SWE, Tsurf) = setupspatialrun(nrows, ncols)
 
 # Run the model
-
-@showprogress "Running model..." for t in times
+@info("running model...")
+#@showprogress "Running model..." 
+@time for t in times
 
     Ta, RH, Ua, SW, LW, Sf, Rf, Ps = read_meteo(t, meteosource)
 

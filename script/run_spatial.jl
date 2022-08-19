@@ -99,10 +99,11 @@ end
 
 @info("running model")
 #@showprogress "Running model..." 
-@time for t in times
+@time begin
+    t= collect(times)[1]
 
-    (Ta, RH, Ua, SW, LW, Sf, Rf, Ps) = read_meteo(t, meteosource)
-    #println("reading meteo-input done")
+    @time (Ta, RH, Ua, SW, LW, Sf, Rf, Ps) = read_meteo(t, meteosource)
+    println("reading meteo-input done")
 
     #p = @profile 
     run!(ebm_mat, cn, snowdepth, SWE, Tsurf, SW, LW, Sf, Rf, Ta, RH, Ua, Ps, nrows, ncols)

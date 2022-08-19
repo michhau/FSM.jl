@@ -56,24 +56,29 @@ function run!(ebm::EBM, cn::Constants, snowdepth::Matrix{Float64}, SWE::Matrix{F
     Qs = qsat(true, Ps, Ta, cn)
     Qa = (RH ./ 100) .* Qs
 
-    println("surf_props")
-    @time surf_props(ebm, cn, Sf, nrow, ncol)
+    #println("surf_props")
+    #@time 
+    surf_props(ebm, cn, Sf, nrow, ncol)
 
-    println("surf_exch and _ebal 6 times")
+    #println("surf_exch and _ebal 6 times")
     kdx = 1
     while kdx < 7
-        @time surf_exch(ebm, cn, Ta, Ua, nrow, ncol)
-        println("surf_exch done")
-        @time surf_ebal(ebm, cn, Ta, Qa, Ua, Ps, SW, LW, nrow, ncol)
-        println("surf_ebal done")
+        #@time 
+        surf_exch(ebm, cn, Ta, Ua, nrow, ncol)
+        #println("surf_exch done")
+        #@time 
+        surf_ebal(ebm, cn, Ta, Qa, Ua, Ps, SW, LW, nrow, ncol)
+        #println("surf_ebal done")
         kdx = kdx + 1
     end
 
-    println("snow")
-    @time (snowdepth, SWE) = snow(ebm, cn, Sf, Rf, Ta, D, S, W, nrow, ncol)
+    #println("snow")
+    #@time
+    (snowdepth, SWE) = snow(ebm, cn, Sf, Rf, Ta, D, S, W, nrow, ncol)
 
-    println("soil")
-    @time soil(ebm, nrow, ncol)
+    #println("soil")
+    #@time
+    soil(ebm, nrow, ncol)
 
     Tsurf = ebm.Tsurf
 

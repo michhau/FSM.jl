@@ -97,7 +97,9 @@ end
 
 # Run the model
 
-@showprogress "Running model..." for t in times
+@info("running model")
+#@showprogress "Running model..." 
+@time for t in times
 
     (Ta, RH, Ua, SW, LW, Sf, Rf, Ps) = read_meteo(t, meteosource)
     #println("reading meteo-input done")
